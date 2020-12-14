@@ -180,13 +180,9 @@ class Visibility:
             elif idx == len(self.vis_points.value) - 1 and current is True:
                 windows['stop'].append(self.vis_points[idx].value)
                 break
-            elif previous != current and (moon_cond and sun_cond):
-                if sun_cond:
-                    x = [self.sun_altaz[idx - 1].alt.value, self.sun_altaz[idx].alt.value]
-                elif moon_cond:
-                    x = [self.moon_altaz[idx - 1].alt.value, self.moon_altaz[idx].alt.value]
+            elif previous != current:
+                x = [self.sun_altaz[idx - 1].alt.value, self.sun_altaz[idx].alt.value]
                 y = [self.vis_points[idx - 1].value, self.vis_points[idx].value]
-                #print(f'{idx}/{len(self.vis_points)} interp', x, y)
                 f = interp1d(np.array(x), np.array(y))
                 if previous is False and current is True:
                     windows['start'].append(f(twilight))
