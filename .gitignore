@@ -128,6 +128,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# vsc
+.vscode/
+
 # Local 
 cfg/
+test/
 !lib/
