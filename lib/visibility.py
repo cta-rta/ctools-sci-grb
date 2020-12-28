@@ -10,7 +10,7 @@
 import astropy.units as u
 import numpy as np
 from scipy.interpolate import interp1d
-from astropy.coordinates import AltAz, EarthLocation, get_sun, get_moon
+from astropy.coordinates import AltAz, EarthLocation, get_sun, get_moon, SkyCoord
 
 
 def complete_irf_name(irfs, site, exposure, azimuth=None):
@@ -122,6 +122,54 @@ class Visibility:
             previous = current
             # night condition
             if self.sun_altaz[idx].alt.value < twilight:
+                current = True
+            else:
+                current = False
+
+            if idx == 0 and current is True:
+                windows['start'].append(self.vis_points[idx].value)
+                continue
+            elif idx == len(self.vis_points.value) - 1 and current is True:
+                windows['stop'].append(self.vis_points[idx].value)
+                break
+            elif previous != current:
+                x = [self.sun_altaz[idx - 1].alt.value, self.sun_altaz[idx].alt.value]
+                y = [self.vis_points[idx - 1].value, self.vis_points[idx].value]
+                f = interp1d(np.array(x), np.array(y))
+                if previous is False and current is True:
+                    windows['start'].append(f(twilight))
+                elif previous is True and current is False:
+                    windows['stop'].append(f(twilight))
+
+        windows['stop'] = np.concatenate(windows['stop'], axis=None)
+        windows['start'] = np.concatenate(windows['start'], axis=None)
+        return windows
+
+    def get_nighttime_moonlit(self, twilight=-18, moon_sep=30, fov_rad=2.5):
+        """Given a twilight altitute threshold for the Sun and a minimum separation from the Moon position, it returns twilight and dawn time for each night covering the event duration.
+        :param twilight: <0|-6|-12|-18|integer> civil, naval or astronomical twilight or night thresholds (int). Default -18 deg (integer).
+        :param moon_sep: <integer> minimum angular separation between moon and FoV border. Default 30 deg.
+        :param fov_rad: <integer> radius of FoV in degrees. Default 2.5.
+        :return: dictionary containing 'start' and 'stop' time of the Sun for each nighttime window of the event
+        """
+        if not hasattr(self, 'vis_points'):
+            raise AttributeError('Must invoke visibility_points() before using this method')
+        if not hasattr(self, 'altaz'):
+            raise AttributeError('Must invoke visibility_altaz() before using this method')
+        self.sun_position()
+        self.moon_position()
+        separation = self.altaz.separation(self.moon_altaz)
+        # add FoV radius to minimum separation from Moon
+        moon_sep += fov_rad
+        windows = {'start': [], 'stop': []}
+        current = None
+        for idx, t in enumerate(self.vis_points.value):
+            previous = current
+            # visibility conditions
+            sun_cond = bool(self.sun_altaz[idx].alt.value < twilight)
+            moon_cond = bool(separation[idx].deg > moon_sep)
+            #print('sun cond', sun_cond, 'moon cond', moon_cond)
+            if sun_cond and moon_cond:
                 current = True
             else:
                 current = False
