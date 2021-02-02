@@ -201,7 +201,6 @@ class Visibility:
             windows['stop'] = np.concatenate(windows['stop'], axis=None)
             windows['start'] = np.concatenate(windows['start'], axis=None)
         else:
-            print('The source is never visible')
             windows['start'] = np.nan
             windows['stop'] = np.nan
         return windows
@@ -267,7 +266,6 @@ class Visibility:
             windows['start'] = np.concatenate(windows['start'], axis=None)
             windows['stop'] = np.concatenate(windows['stop'], axis=None)
         else:
-            print(f'The source never raises above {thresholds[0]} deg')
             windows['start'] = np.nan
             windows['stop'] = np.nan
             windows['zref'] = np.nan
