@@ -134,6 +134,7 @@ dmypy.json
 .vscode/
 
 # Local 
-cfg/
+cfg/local_visibility.yml
+!cfg/config.yaml
 test/
 !lib/
