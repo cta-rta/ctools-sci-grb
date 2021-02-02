@@ -54,9 +54,12 @@ if not isdir(catalog):
 
 if cfg['path']['filename'] == None:
     runids = [f for f in os.listdir(catalog) if '.fits' in f and isfile(join(catalog, f))]
+    if len(runids) == 0:
+        raise ValueError('No valid FITS file found')    
 else:
     runids = [filename]
 runids = sorted(runids)
+
 
 # ----------------------------------------------------------------------------- loop runid
 
