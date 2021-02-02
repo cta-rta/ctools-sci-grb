@@ -41,14 +41,20 @@ if '$' in cfg['path']['output']:
     output = os.path.expandvars(cfg['path']['output'])
 else:
     output = cfg['path']['output']
+if '$' in cfg['path']['filename']:
+    filename = os.path.expandvars(cfg['path']['filename'])
+else:
+    filename = cfg['path']['filename']
 
 logging.info(f'catalog: {catalog}')
 logging.info(f'output: {output}')
 if not isdir(catalog):
     raise ValueError('Please correctly select a catalog folder')
 
-runids = [f for f in os.listdir(catalog) if '.fits' in f and isfile(join(catalog, f))]
-
+if cfg['path']['filename'] == 'null':
+    runids = [f for f in os.listdir(catalog) if '.fits' in f and isfile(join(catalog, f))]
+else:
+    runids = [filename]
 
 runs = {'north': dict(), 'south': dict()}
 data = {'run': 'name', 'visibility': runs}
@@ -71,7 +77,7 @@ for runid in runids:
             t_start = Time(hdr['GRBJD'] * u.day, format='jd')
         except KeyError:
             raise ValueError('This catalog cannot be processed. The headers do not contain a "GRBJD" trigger time keyword.')
-        
+
         try:
             times = np.array(hdul['TIMES (AFTERGLOW)'].data.tolist())
         except KeyError:
