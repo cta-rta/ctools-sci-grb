@@ -21,7 +21,7 @@ To complete the environment be sure to download and install the correct IRFs (on
 
 Under cfg you can find a sample configuration file. Description of each parameter is commented within. This file will serve as input when running the code.
 
-### Running the code
+### Compiling the visibility table
 
 After adjusting the configuration file to your needs, you can run the code as follows:
 
@@ -29,7 +29,7 @@ After adjusting the configuration file to your needs, you can run the code as fo
 python runCatVisibility.py -f cfg/config.yaml
 ```
 
-### Reading the output
+### Reading the visibility table
 
 The output is saved via numpy as a binary NPY file. You can run an example of how to access data like this:
 
