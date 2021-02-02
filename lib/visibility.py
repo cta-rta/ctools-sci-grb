@@ -145,7 +145,7 @@ class Visibility:
         windows['start'] = np.concatenate(windows['start'], axis=None)
         return windows
 
-    def get_nighttime_moonlit(self, twilight=-18, moon_sep=30, fov_rad=2.5):
+    def get_nighttime_moonlight(self, twilight=-18, moon_sep=30, fov_rad=2.5, moonpha=0, max_moonpha=1):
         """Given a twilight altitute threshold for the Sun and a minimum separation from the Moon position, it returns twilight and dawn time for each night covering the event duration.
         :param twilight: <0|-6|-12|-18|integer> civil, naval or astronomical twilight or night thresholds (int). Default -18 deg (integer).
         :param moon_sep: <integer> minimum angular separation between moon and FoV border. Default 30 deg.
@@ -167,7 +167,7 @@ class Visibility:
             previous = current
             # visibility conditions
             sun_cond = bool(self.sun_altaz[idx].alt.value < twilight)
-            moon_cond = bool(separation[idx].deg > moon_sep)
+            moon_cond = bool(separation[idx].deg > moon_sep and moonpha < max_moonpha)
             #print('sun cond', sun_cond, 'moon cond', moon_cond)
             if sun_cond and moon_cond:
                 current = True
@@ -180,7 +180,7 @@ class Visibility:
             elif idx == len(self.vis_points.value) - 1 and current is True:
                 windows['stop'].append(self.vis_points[idx].value)
                 break
-            elif previous != current:
+            elif previous != current and moon_cond:
                 x = [self.sun_altaz[idx - 1].alt.value, self.sun_altaz[idx].alt.value]
                 y = [self.vis_points[idx - 1].value, self.vis_points[idx].value]
                 f = interp1d(np.array(x), np.array(y))
@@ -188,9 +188,22 @@ class Visibility:
                     windows['start'].append(f(twilight))
                 elif previous is True and current is False:
                     windows['stop'].append(f(twilight))
+            elif previous != current and not moon_cond:
+                x = [separation[idx - 1].deg, separation[idx].deg]
+                y = [self.vis_points[idx - 1].value, self.vis_points[idx].value]
+                f = interp1d(np.array(x), np.array(y))
+                if previous is False and current is True:
+                    windows['start'].append(f(moon_sep))
+                elif previous is True and current is False:
+                    windows['stop'].append(f(moon_sep))
 
-        windows['stop'] = np.concatenate(windows['stop'], axis=None)
-        windows['start'] = np.concatenate(windows['start'], axis=None)
+        if len(windows['start']) != 0:
+            windows['stop'] = np.concatenate(windows['stop'], axis=None)
+            windows['start'] = np.concatenate(windows['start'], axis=None)
+        else:
+            print('The source is never visible')
+            windows['start'] = np.nan
+            windows['stop'] = np.nan
         return windows
 
     def associate_irf_zenith_angle(self, thresholds=(10, 25, 55), zenith_angles=(60, 40, 20)):
@@ -199,7 +212,7 @@ class Visibility:
         angle to use when.
         :param thresholds: (tuple or list of int)
         :param zenith_angles: (tuple or list of int)
-        :return: dictionary containing 'start' time and 'stop' time associated to each 'irf' zenith angle
+        :return: dictionary containing 'start' time and 'stop' time associated to each 'zref' zenith angle
         """
         if len(thresholds) != len(zenith_angles):
             raise AttributeError('thresholds length must be equal to zenith_angles length')
@@ -209,7 +222,7 @@ class Visibility:
             raise AttributeError('Must invoke visibility_altaz() before using this method')
         thresholds = sorted(thresholds)
         zenith_angles = sorted(zenith_angles, reverse=True)
-        windows = {'start': [], 'stop': [], 'irf': []}
+        windows = {'start': [], 'stop': [], 'zref': []}
         previous, current = None, None
         for idx, alt in enumerate(self.altaz.alt.value):
             for j, z in enumerate(thresholds):
@@ -224,7 +237,7 @@ class Visibility:
 
             if idx == 0 and previous != current and current is not None:
                 windows['start'].append(self.vis_points[idx].value)
-                windows['irf'].append(current)
+                windows['zref'].append(current)
             elif idx == len(self.altaz) - 1 and current is not None:
                 windows['stop'].append(self.vis_points[idx].value)
             elif previous != current and previous is None:
@@ -232,7 +245,7 @@ class Visibility:
                 y = [self.vis_points[idx - 1].value, self.vis_points[idx].value]
                 f = interp1d(x, y)
                 windows['start'].append(f(thresholds[0]))
-                windows['irf'].append(current)
+                windows['zref'].append(current)
             elif previous != current and current is None:
                 x = [self.altaz[idx - 1].alt.value, self.altaz[idx].alt.value]
                 y = [self.vis_points[idx - 1].value, self.vis_points[idx].value]
@@ -248,13 +261,16 @@ class Visibility:
                 else:
                     windows['stop'].append(f(thresholds[zenith_angles.index(previous)]))
                     windows['start'].append(f(thresholds[zenith_angles.index(previous)]))
-                windows['irf'].append(current)
+                windows['zref'].append(current)
             previous = current
-        if len(windows['irf']) != 0:
+        if len(windows['zref']) != 0:
             windows['start'] = np.concatenate(windows['start'], axis=None)
             windows['stop'] = np.concatenate(windows['stop'], axis=None)
         else:
-            print('The source never raises above %d deg' % thresholds[0])
+            print(f'The source never raises above {thresholds[0]} deg')
+            windows['start'] = np.nan
+            windows['stop'] = np.nan
+            windows['zref'] = np.nan
         return windows
 
     def associate_irf_one_night(self, source_radec, start_time, duration, site, num_points,
@@ -268,7 +284,7 @@ class Visibility:
         :param num_points: time grid points (int)
         :param thresholds: altitude lower bounds for the IRFs (list of int)
         :param zenith_angles: associated zenith angles (list of int)
-        :return irfs: dictionary containing 'start' time and 'stop' time associated to each 'irf' zenith angle
+        :return irfs: dictionary containing 'start' time and 'stop' time associated to each 'zref' zenith angle
         """
         self.visibility_points(start_time, duration, num_points)
         self.visibility_altaz(source_radec, site)
