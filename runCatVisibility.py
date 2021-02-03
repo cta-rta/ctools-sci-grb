@@ -30,8 +30,6 @@ cf = parser.parse_args().config
 with open(cf) as f:
     cfg = yaml.load(f, Loader=yaml.FullLoader)
 
-logging.basicConfig(filename=__file__.replace('.py','.log'), filemode='w+', level=logging.DEBUG, format='%(asctime)s %(message)s')
-
 # ----------------------------------------------------------------------------- catalog
 if '$' in cfg['path']['catalog']:
     catalog = os.path.expandvars(cfg['path']['catalog'])
@@ -64,6 +62,7 @@ runids = sorted(runids)
 
 # -------------------------------------------------------------------------log the configuration
 
+logging.basicConfig(filename=output.replace('.npy','.log'), filemode='w+', level=logging.DEBUG, format='%(asctime)s %(message)s')
 logging.info('#################')
 logging.info('# CONFIGURATION #')
 logging.info(f'#################\n\n{yaml.dump(cfg)}')
