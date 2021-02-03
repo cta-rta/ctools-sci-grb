@@ -145,7 +145,7 @@ class Visibility:
         windows['start'] = np.concatenate(windows['start'], axis=None)
         return windows
 
-    def get_nighttime_moonlight(self, twilight=-18, moon_sep=30, fov_rad=2.5, moonpha=0, max_moonpha=1):
+    def get_nighttime_moonlight(self, twilight=-18, moon_sep=30, fov_rad=2.5, moonpha=0, max_moonpha=0.8):
         """Given a twilight altitute threshold for the Sun and a minimum separation from the Moon position, it returns twilight and dawn time for each night covering the event duration.
         :param twilight: <0|-6|-12|-18|integer> civil, naval or astronomical twilight or night thresholds (int). Default -18 deg (integer).
         :param moon_sep: <integer> minimum angular separation between moon and FoV border. Default 30 deg.

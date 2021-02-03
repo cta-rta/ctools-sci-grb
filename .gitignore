@@ -135,6 +135,7 @@ dmypy.json
 
 # Local 
 cfg/local_visibility.yml
+cfg/myconfig.yml
 !cfg/config.yaml
 test/
 !lib/

@@ -12,9 +12,9 @@ setup:
   twilight: -18
   # min angular separation from Moon 
   moon_sep: 30
-  # max moon phase (range 0-1)
+  # max moon phase (range 0-1) threshold of observability
   moon_pha: 0.8
-  # FoV radius (min angular separation will be added to this)
+  # FoV radius (min angular separation will be added to this); set 0 if moon_sep wrt pointing
   fov_rad: 3
   # altitude (lower) thresholds for IRFs ranges
   thresholds:

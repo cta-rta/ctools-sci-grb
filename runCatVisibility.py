@@ -100,7 +100,7 @@ for runid in runids:
             visibility.visibility_points(t_start, duration, cfg['total_points'])
             visibility.visibility_altaz(source_radec, cfg['sites_list'][site])
             # find nights account for Moon (use default Moon thresholds)
-            nights = visibility.get_nighttime_moonlight(twilight=cfg['setup']['twilight'], moon_sep=cfg['setup']['moon_sep'], fov_rad=cfg['setup']['fov_rad'])
+            nights = visibility.get_nighttime_moonlight(twilight=cfg['setup']['twilight'], moon_sep=cfg['setup']['moon_sep'], fov_rad=cfg['setup']['fov_rad'], moonpha=0, max_moonpha=cfg['setup']['moon_pha'])
             #print(f'nights: {nights}')
             del visibility
             # within each night find IRFs
