@@ -44,8 +44,6 @@ elif '$' in cfg['path']['output']:
 else:
     output = cfg['path']['output']
 
-logging.info(f'catalog: {catalog}')
-logging.info(f'output: {output}')
 if not isdir(catalog):
     raise ValueError('Please correctly select a catalog folder')    
 
@@ -64,6 +62,15 @@ else:
             raise ValueError(f'Specified template {runid} does not exist in catalog')
 runids = sorted(runids)
 
+# -------------------------------------------------------------------------log the configuration
+
+logging.info('#################')
+logging.info('# CONFIGURATION #')
+logging.info(f'#################\n\n{yaml.dump(cfg)}')
+logging.info('##############')
+logging.info('# VISIBILITY #')
+logging.info('##############')
+
 # ----------------------------------------------------------------------------- loop runid
 
 data = {}
@@ -71,6 +78,7 @@ for runid in runids:
     logging.info('------------------------------------------------------------------ #')
     print(f'Processing {runid}')
     logging.info(f'Processing {runid}')
+    logging.info('----------')
     data[f'{runid.replace(".fits", "")}'] = {}
     # load template
     with fits.open(join(catalog, runid)) as hdul:
