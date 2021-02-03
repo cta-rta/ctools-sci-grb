@@ -272,6 +272,7 @@ class Visibility:
         if len(windows['zref']) != 0:
             windows['start'] = np.concatenate(windows['start'], axis=None)
             windows['stop'] = np.concatenate(windows['stop'], axis=None)
+            windows['zref'] = np.concatenate(windows['zref'], axis=None)
         else:
             windows['start'] = np.nan
             windows['stop'] = np.nan
