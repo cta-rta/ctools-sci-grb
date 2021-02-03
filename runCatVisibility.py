@@ -54,9 +54,14 @@ if cfg['path']['filename'] == None:
     if len(runids) == 0:
         raise ValueError('No valid FITS file found')    
 elif type(cfg['path']['filename']) == str:
+    if not isfile(join(catalog, cfg['path']['filename'])):
+            raise ValueError(f'Specified template {runid} does not exist in catalog')
     runids = [cfg['path']['filename']]
 else:
     runids = cfg['path']['filename']
+    for runid in runids:
+        if not isfile(join(catalog, runid)):
+            raise ValueError(f'Specified template {runid} does not exist in catalog')
 runids = sorted(runids)
 
 # ----------------------------------------------------------------------------- loop runid
@@ -89,8 +94,7 @@ for runid in runids:
         warnings.filterwarnings('ignore')
         # --------------------------------------------------------------------------- loop sites
         for site in cfg['sites_list']:
-            print(f'Processing {site} site visibility')
-            logging.info(f'Processing {site} site visibility')
+            logging.info(f'{site} site')
             # initialise site coordinates
             site_coords = EarthLocation.of_site(cfg['sites_list'][site])
             # initialise
@@ -103,17 +107,16 @@ for runid in runids:
             del visibility
             # within each night find IRFs
             if type(nights['start']) == float:
-                print('Not visible either to moonlight od daylight conditions')
-                logging.info('Not visible either to moonlight od daylight conditions')
+                logging.info('................Not visible either to moonlight or daylight conditions')
                 irfs = nights
                 irfs['zref'] = np.nan
                 #print(f'irfs: {irfs}')
                 data[f'{runid.replace(".fits", "")}'][f'{site}'] = irfs
                 continue
-            else:
-                print(f'nights: {nights}')
+                         
+            logging.info('Observability windows:')  
             for i in range(len(nights['start'])):
-                logging.info(f'Night {i+1} of {len(nights["start"])}')
+                logging.info(f'................Night {i+1} of {len(nights["start"])} in [{nights["start"][i]}, {nights["stop"][i]}]')
                 t_start = Time(nights['start'][i], format='jd')
                 duration = Time(nights['stop'][i] - nights['start'][i], format='jd')
                 # initialise
@@ -124,10 +127,11 @@ for runid in runids:
                 # IRFs and relative time intervals
                 irfs = visibility.associate_irf_zenith_angle(cfg['setup']['thresholds'], cfg['setup']['zenith_angles'])
                 if type(irfs['zref']) == float:
-                    print('Not visible due to low altitude')
-                    logging.info('Not visible due to low altitude')
+                    logging.info('................Not visible due to low altitude')
                 else:
-                    print(f'irfs {irfs}')
+                    logging.info('................Altitude intervals:')
+                    for n, z in irfs['zref']:
+                        logging.info(f'................Zenith Ref. {z} in [{irfs["start"][n]}, {irfs["stop"][n]}]')
                 data[f'{runid.replace(".fits", "")}'][f'{site}'] = irfs
                 del visibility
 
