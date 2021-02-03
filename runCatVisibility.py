@@ -114,7 +114,7 @@ for runid in runids:
                 data[f'{runid.replace(".fits", "")}'][f'{site}'] = irfs
                 continue
                          
-            logging.info('Observability windows:')  
+            logging.info('Observability windows:') 
             for i in range(len(nights['start'])):
                 logging.info(f'................Night {i+1} of {len(nights["start"])} in [{nights["start"][i]}, {nights["stop"][i]}]')
                 t_start = Time(nights['start'][i], format='jd')
@@ -130,8 +130,8 @@ for runid in runids:
                     logging.info('................Not visible due to low altitude')
                 else:
                     logging.info('................Altitude intervals:')
-                    for n, z in irfs['zref']:
-                        logging.info(f'................Zenith Ref. {z} in [{irfs["start"][n]}, {irfs["stop"][n]}]')
+                    for n in range(len(irfs['zref'])):
+                        logging.info(f'................Zenith Ref. {irfs["zref"][n]} in [{irfs["start"][n]}, {irfs["stop"][n]}]')
                 data[f'{runid.replace(".fits", "")}'][f'{site}'] = irfs
                 del visibility
 
