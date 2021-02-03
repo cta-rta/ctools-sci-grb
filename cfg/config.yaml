@@ -1,8 +1,8 @@
 # path configuration
 path:
-  # template --> null if you want to run an entire catalog
-  filename: path/to/template.fits
-  # folder where templates are stored --> null if you want to run a single template
+  # template (or list of templates) --> null if you want to run an entire catalog
+  filename: template.fits
+  # folder where templates are stored 
   catalog: path/to/templates/folder
   # output where visibility table will be saved
   output: path/to/visibility/output.npy
