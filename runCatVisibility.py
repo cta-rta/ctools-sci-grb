@@ -37,29 +37,27 @@ if '$' in cfg['path']['catalog']:
     catalog = os.path.expandvars(cfg['path']['catalog'])
 else:
     catalog = cfg['path']['catalog']
-if '$' in cfg['path']['output']:
+if cfg['path']['output'] == None:
+    output = 'visibility_output.npy'
+elif '$' in cfg['path']['output']:
     output = os.path.expandvars(cfg['path']['output'])
 else:
     output = cfg['path']['output']
 
-if cfg['path']['filename'] != None and '$' in cfg['path']['filename']:
-    filename = os.path.expandvars(cfg['path']['filename'])
-else:
-    filename = cfg['path']['filename']
-
 logging.info(f'catalog: {catalog}')
 logging.info(f'output: {output}')
 if not isdir(catalog):
-    raise ValueError('Please correctly select a catalog folder')
+    raise ValueError('Please correctly select a catalog folder')    
 
 if cfg['path']['filename'] == None:
     runids = [f for f in os.listdir(catalog) if '.fits' in f and isfile(join(catalog, f))]
     if len(runids) == 0:
         raise ValueError('No valid FITS file found')    
+elif type(cfg['path']['filename']) == str:
+    runids = [cfg['path']['filename']]
 else:
-    runids = [filename]
+    runids = cfg['path']['filename']
 runids = sorted(runids)
-
 
 # ----------------------------------------------------------------------------- loop runid
 
@@ -91,6 +89,7 @@ for runid in runids:
         warnings.filterwarnings('ignore')
         # --------------------------------------------------------------------------- loop sites
         for site in cfg['sites_list']:
+            print(f'Processing {site} site visibility')
             logging.info(f'Processing {site} site visibility')
             # initialise site coordinates
             site_coords = EarthLocation.of_site(cfg['sites_list'][site])
@@ -101,16 +100,18 @@ for runid in runids:
             visibility.visibility_altaz(source_radec, cfg['sites_list'][site])
             # find nights account for Moon (use default Moon thresholds)
             nights = visibility.get_nighttime_moonlight(twilight=cfg['setup']['twilight'], moon_sep=cfg['setup']['moon_sep'], fov_rad=cfg['setup']['fov_rad'], moonpha=0, max_moonpha=cfg['setup']['moon_pha'])
-            #print(f'nights: {nights}')
             del visibility
             # within each night find IRFs
-            if type(nights['start']) == type(float()):
-                logging.info('Not visible')
+            if type(nights['start']) == float:
+                print('Not visible either to moonlight od daylight conditions')
+                logging.info('Not visible either to moonlight od daylight conditions')
                 irfs = nights
                 irfs['zref'] = np.nan
                 #print(f'irfs: {irfs}')
                 data[f'{runid.replace(".fits", "")}'][f'{site}'] = irfs
-                break
+                continue
+            else:
+                print(f'nights: {nights}')
             for i in range(len(nights['start'])):
                 logging.info(f'Night {i+1} of {len(nights["start"])}')
                 t_start = Time(nights['start'][i], format='jd')
@@ -122,7 +123,11 @@ for runid in runids:
                 visibility.visibility_altaz(source_radec, cfg['sites_list'][site])
                 # IRFs and relative time intervals
                 irfs = visibility.associate_irf_zenith_angle(cfg['setup']['thresholds'], cfg['setup']['zenith_angles'])
-                #print(f'irfs {irfs}')
+                if type(irfs['zref']) == float:
+                    print('Not visible due to low altitude')
+                    logging.info('Not visible due to low altitude')
+                else:
+                    print(f'irfs {irfs}')
                 data[f'{runid.replace(".fits", "")}'][f'{site}'] = irfs
                 del visibility
 
