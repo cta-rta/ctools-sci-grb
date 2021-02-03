@@ -7,6 +7,7 @@
 # Ambra Di Piano <ambra.dipiano@inaf.it>
 # *******************************************************************************
 
+import logging
 import astropy.units as u
 import numpy as np
 from scipy.interpolate import interp1d
@@ -166,36 +167,42 @@ class Visibility:
         for idx, t in enumerate(self.vis_points.value):
             previous = current
             # visibility conditions
-            sun_cond = bool(self.sun_altaz[idx].alt.value < twilight)
-            moon_cond = bool(separation[idx].deg > moon_sep and moonpha < max_moonpha)
-            #print('sun cond', sun_cond, 'moon cond', moon_cond)
-            if sun_cond and moon_cond:
+            sun_cond = np.array(self.sun_altaz.alt.value < twilight)
+            moon_cond = np.array(separation.deg > moon_sep) 
+            if sun_cond[idx] and moon_cond[idx] and moonpha < max_moonpha:
                 current = True
             else:
                 current = False
-
             if idx == 0 and current is True:
                 windows['start'].append(self.vis_points[idx].value)
                 continue
             elif idx == len(self.vis_points.value) - 1 and current is True:
                 windows['stop'].append(self.vis_points[idx].value)
                 break
-            elif previous != current and moon_cond:
-                x = [self.sun_altaz[idx - 1].alt.value, self.sun_altaz[idx].alt.value]
-                y = [self.vis_points[idx - 1].value, self.vis_points[idx].value]
+            elif previous != current and previous != None:
+                use = None
+                # assign x and y arrays
+                if sun_cond[idx] != sun_cond[idx - 1]:
+                    x = [self.sun_altaz[idx - 1].alt.value, self.sun_altaz[idx].alt.value]
+                    y = [self.vis_points[idx - 1].value, self.vis_points[idx].value]
+                    use = 'sun'
+                elif moon_cond[idx] != moon_cond[idx - 1]:
+                    x = [separation[idx - 1].deg, separation[idx].deg]
+                    y = [self.vis_points[idx - 1].value, self.vis_points[idx].value] 
+                    use = 'moon'                
+                # interpolate
                 f = interp1d(np.array(x), np.array(y))
                 if previous is False and current is True:
-                    windows['start'].append(f(twilight))
+                    if use == 'sun':
+                        windows['start'].append(f(twilight))
+                    elif use == 'moon':
+                        windows['start'].append(f(moon_sep))
                 elif previous is True and current is False:
-                    windows['stop'].append(f(twilight))
-            elif previous != current and not moon_cond:
-                x = [separation[idx - 1].deg, separation[idx].deg]
-                y = [self.vis_points[idx - 1].value, self.vis_points[idx].value]
-                f = interp1d(np.array(x), np.array(y))
-                if previous is False and current is True:
-                    windows['start'].append(f(moon_sep))
-                elif previous is True and current is False:
-                    windows['stop'].append(f(moon_sep))
+                    if use == 'sun':
+                        windows['stop'].append(f(twilight))
+                    elif use == 'moon':
+                        windows['stop'].append(f(moon_sep))
+
 
         if len(windows['start']) != 0:
             windows['stop'] = np.concatenate(windows['stop'], axis=None)
