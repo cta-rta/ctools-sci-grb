@@ -36,7 +36,8 @@ The output is saved via numpy as a binary NPY file. You can run an example of ho
 ```bash
 python readVisTable -f path/to/output.npy
 ```
-### Compiling the visibility table
+### Compiling the significance table
+
 The script SigmaCat.py generates a npy table containing the significance of the observations. It takes as input the visibility table previously generated.
 After adjusting the configuration file to your needs, you can run the code as follows:
 
