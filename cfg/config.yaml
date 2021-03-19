@@ -4,8 +4,14 @@ path:
   filename: template.fits
   # folder where templates are stored 
   catalog: path/to/templates/folder
-  # output where visibility table will be saved
+  # output where visibility table will be saved (used also as input for signigficance calculation)
   output: path/to/visibility/output.npy
+  # input XML model --> null if you want to run an entire catalog
+  xmlfilename: path/to/model.xml
+  # folder where input XML models are stored (the program looks for xml files even in subdirectories) --> null if you want to run a single template 
+  xmlcatalog: path/to/xml/folder
+  #output where significance table will be saved
+  sigmaoutput: path/to/significance/output.npy
 # observation setup
 setup:
   # sub altitude below which starts the night (for astronomical darkness set -18)
@@ -34,3 +40,18 @@ sites_list:
 total_points: 100
 # grid points within visibility window
 window_points: 10
+#parameters to use for simulation with ctools
+ctools:
+ #simulation radius
+   rad: 2.5
+ #xml model to be used for likelihood
+   fitmodel: path/to/fitmodel.xml    
+ #calibration database       
+   caldb: prod3b-v2
+ #maximum energy value
+   Emax: 2.
+ #seed
+   seed: 10
+  
+
+
