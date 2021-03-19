@@ -8,3 +8,6 @@ dependencies:
   - astropy
   - yaml
   - scipy
+  # optional (i.e. for notebook)
+  - matplotlib
+  - pandas
