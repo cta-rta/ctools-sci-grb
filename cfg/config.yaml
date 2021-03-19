@@ -16,7 +16,7 @@ path:
 setup:
   # sub altitude below which starts the night (for astronomical darkness set -18)
   twilight: -18
-  # min angular separation from Moon 
+  # min angular separation from Moon --> null if moon should not be considered
   moon_sep: 30
   # max moon phase (range 0-1) threshold of observability
   moon_pha: 0.8
