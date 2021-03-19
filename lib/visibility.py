@@ -159,7 +159,7 @@ class Visibility:
             raise AttributeError('Must invoke visibility_altaz() before using this method')
         self.sun_position()
         self.moon_position()
-        separation = self.altaz.separation(self.moon_altaz)
+        dist = self.altaz.separation(self.moon_altaz)
         # add FoV radius to minimum separation from Moon
         moon_sep += fov_rad
         windows = {'start': [], 'stop': []}
@@ -168,7 +168,7 @@ class Visibility:
             previous = current
             # visibility conditions
             sun_cond = np.array(self.sun_altaz.alt.value < twilight)
-            moon_cond = np.array(separation.deg > moon_sep) 
+            moon_cond = np.array(dist.deg > moon_sep) 
             if sun_cond[idx] and moon_cond[idx] and moonpha < max_moonpha:
                 current = True
             else:
@@ -187,7 +187,7 @@ class Visibility:
                     y = [self.vis_points[idx - 1].value, self.vis_points[idx].value]
                     use = 'sun'
                 elif moon_cond[idx] != moon_cond[idx - 1]:
-                    x = [separation[idx - 1].deg, separation[idx].deg]
+                    x = [dist[idx - 1].deg, dist[idx].deg]
                     y = [self.vis_points[idx - 1].value, self.vis_points[idx].value] 
                     use = 'moon'                
                 # interpolate
