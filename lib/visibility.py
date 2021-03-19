@@ -107,7 +107,7 @@ class Visibility:
         self.moon_altaz = moon.transform_to(self.altaz)
         return self
 
-    def get_nighttime(self, twilight=-18):
+    def get_nighttime(self, twilight=-18, digits=6):
         """Given a twilight altitute threshold for the Sun, it returns twilight and dawn time for each night covering the event duration.
         :param twilight: <0|-6|-12|-18> civil, naval or astronomical twilight or night thresholds (int). Default -18.
         :return: dictionary containing 'twilight' and 'dawn' time of the Sun for each nighttime window of the event
@@ -143,14 +143,14 @@ class Visibility:
                     windows['stop'].append(f(twilight))
 
         if len(windows['start']) != 0:
-            windows['stop'] = np.concatenate(windows['stop'], axis=None)
-            windows['start'] = np.concatenate(windows['start'], axis=None)
+            windows['stop'] = np.concatenate(np.around(windows['stop'], digits), axis=None)
+            windows['start'] = np.concatenate(np.around(windows['start'], digits), axis=None)
         else:
             windows['start'] = np.nan
             windows['stop'] = np.nan
         return windows
 
-    def get_nighttime_moonlight(self, twilight=-18, moon_sep=30, fov_rad=0, moonpha=0, max_moonpha=0.8):
+    def get_nighttime_moonlight(self, twilight=-18, moon_sep=30, fov_rad=0, moonpha=0, max_moonpha=0.8, digits=6):
         """Given a twilight altitute threshold for the Sun and a minimum separation from the Moon position, it returns twilight and dawn time for each night covering the event duration.
         :param twilight: <0|-6|-12|-18|integer> civil, naval or astronomical twilight or night thresholds (int). Default -18 deg (integer).
         :param moon_sep: <integer> minimum angular separation between moon and FoV border. Default 30 deg.
@@ -209,14 +209,14 @@ class Visibility:
 
 
         if len(windows['start']) != 0:
-            windows['stop'] = np.concatenate(windows['stop'], axis=None)
-            windows['start'] = np.concatenate(windows['start'], axis=None)
+            windows['stop'] = np.concatenate(np.around(windows['stop'], digits), axis=None)
+            windows['start'] = np.concatenate(np.around(windows['start'], digits), axis=None)
         else:
             windows['start'] = np.nan
             windows['stop'] = np.nan
         return windows
 
-    def associate_irf_zenith_angle(self, thresholds=(10, 25, 55), zenith_angles=(60, 40, 20)):
+    def associate_irf_zenith_angle(self, thresholds=(10, 25, 55), zenith_angles=(60, 40, 20), digits=6):
         """
         Given altitude lower bounds and the respective IRFs zenith angles, it returns which IRF zenith
         angle to use when.
@@ -274,9 +274,9 @@ class Visibility:
                 windows['zref'].append(current)
             previous = current
         if len(windows['zref']) != 0:
-            windows['start'] = np.concatenate(windows['start'], axis=None)
-            windows['stop'] = np.concatenate(windows['stop'], axis=None)
-            windows['zref'] = np.concatenate(windows['zref'], axis=None)
+            windows['start'] = np.concatenate(np.around(windows['start'], digits), axis=None)
+            windows['stop'] = np.concatenate(np.around(windows['stop'], digits), axis=None)
+            windows['zref'] = np.concatenate(np.around(windows['zref'], digits), axis=None)
         else:
             windows['start'] = np.nan
             windows['stop'] = np.nan
