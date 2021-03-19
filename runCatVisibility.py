@@ -110,7 +110,10 @@ for runid in runids:
             visibility.visibility_points(t_start, duration, cfg['total_points'])
             visibility.visibility_altaz(source_radec, cfg['sites_list'][site])
             # find nights account for Moon (use default Moon thresholds)
-            nights = visibility.get_nighttime_moonlight(twilight=cfg['setup']['twilight'], moon_sep=cfg['setup']['moon_sep'], fov_rad=cfg['setup']['fov_rad'], moonpha=0, max_moonpha=cfg['setup']['moon_pha'])
+            if cfg['setup']['moon_sep'] == None:
+                nights = visibility.get_nighttime(twilight=cfg['setup']['twilight'])
+            else: 
+                nights = visibility.get_nighttime_moonlight(twilight=cfg['setup']['twilight'], moon_sep=cfg['setup']['moon_sep'], fov_rad=cfg['setup']['fov_rad'], moonpha=0, max_moonpha=cfg['setup']['moon_pha'])
             del visibility
             # within each night find IRFs
             if type(nights['start']) == float:
@@ -141,8 +144,6 @@ for runid in runids:
                         logging.info(f'................Zenith Ref. {irfs["zref"][n]} in [{irfs["start"][n]}, {irfs["stop"][n]}]')
                 data[f'{runid.replace(".fits", "")}'][f'{site}'] = irfs
                 del visibility
-
-#print(data)
 
 np.save(output, data)
 
