@@ -139,3 +139,7 @@ cfg/myconfig.yml
 !cfg/config.yaml
 test/
 !lib/
+*.sh
+*.log
+plotV*.py
+*.png
