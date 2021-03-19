@@ -143,3 +143,4 @@ test/
 *.log
 plotV*.py
 *.png
+notebooks/ambra*ipynb
