@@ -6,7 +6,7 @@ dependencies:
   - gammalib=1.7.3
   - ctools=1.7.3
   - astropy
-  - yaml
+  - pyyaml
   - scipy
   # optional (i.e. for notebook)
   - matplotlib
