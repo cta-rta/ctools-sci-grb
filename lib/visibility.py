@@ -142,11 +142,15 @@ class Visibility:
                 elif previous is True and current is False:
                     windows['stop'].append(f(twilight))
 
-        windows['stop'] = np.concatenate(windows['stop'], axis=None)
-        windows['start'] = np.concatenate(windows['start'], axis=None)
+        if len(windows['start']) != 0:
+            windows['stop'] = np.concatenate(windows['stop'], axis=None)
+            windows['start'] = np.concatenate(windows['start'], axis=None)
+        else:
+            windows['start'] = np.nan
+            windows['stop'] = np.nan
         return windows
 
-    def get_nighttime_moonlight(self, twilight=-18, moon_sep=30, fov_rad=2.5, moonpha=0, max_moonpha=0.8):
+    def get_nighttime_moonlight(self, twilight=-18, moon_sep=30, fov_rad=0, moonpha=0, max_moonpha=0.8):
         """Given a twilight altitute threshold for the Sun and a minimum separation from the Moon position, it returns twilight and dawn time for each night covering the event duration.
         :param twilight: <0|-6|-12|-18|integer> civil, naval or astronomical twilight or night thresholds (int). Default -18 deg (integer).
         :param moon_sep: <integer> minimum angular separation between moon and FoV border. Default 30 deg.
@@ -169,7 +173,7 @@ class Visibility:
             # visibility conditions
             sun_cond = np.array(self.sun_altaz.alt.value < twilight)
             moon_cond = np.array(dist.deg > moon_sep) 
-            if sun_cond[idx] and moon_cond[idx] and moonpha < max_moonpha:
+            if sun_cond[idx] and moon_cond[idx]:
                 current = True
             else:
                 current = False
