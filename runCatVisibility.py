@@ -90,7 +90,7 @@ with warnings.catch_warnings():
             source_radec = SkyCoord(ra=hdr['RA'] * u.deg, dec=hdr['DEC'] * u.deg, frame='icrs')
             # source trigger time and afterglow duration
             try:
-                t_start = Time(hdr['GRBJD'] * u.day, format='jd')
+                trigger = Time(hdr['GRBJD'] * u.day, format='jd')
             except KeyError:
                 raise ValueError('This catalog cannot be processed. The headers do not contain a "GRBJD" trigger time keyword.')
 
@@ -108,27 +108,24 @@ with warnings.catch_warnings():
             # initialise
             visibility = Visibility()
             # visibility points in JD and AltAz
-            visibility.visibility_points(t_start, afterglow_duration, cfg['total_points'])
+            visibility.visibility_points(trigger, afterglow_duration, cfg['total_points'])
             visibility.visibility_altaz(source_radec, cfg['sites_list'][site])
             # find nights account for Moon (use default Moon thresholds)
             if cfg['setup']['moon_sep'] == None:
                 nights = visibility.get_nighttime(twilight=cfg['setup']['twilight'])
             else: 
                 nights = visibility.get_nighttime_moonlight(twilight=cfg['setup']['twilight'], moon_sep=cfg['setup']['moon_sep'], fov_rad=cfg['setup']['fov_rad'], moonpha=0, max_moonpha=cfg['setup']['moon_pha'])
-            del visibility
+            #del visibility
             # within each night find IRFs
             if type(nights['start']) == float:
                 logging.info('................Not visible either to moonlight or daylight conditions')
-                irfs = nights
-                irfs['zref'] = np.nan
-                #print(f'irfs: {irfs}')
                 data[f'{runid.replace(".fits", "")}'][f'{site}'] = np.nan
-                del nights, irfs, site_coords
-                continue
+                #del nights, irfs, site_coords
                    
             logging.info('Observability windows:') 
             data[f'{runid.replace(".fits", "")}'][f'{site}'] = {}
             for i in range(len(nights['start'])):
+                print('Night', i+1, 'of', len(nights['start']))
                 logging.info(f'................Night {i+1} of {len(nights["start"])} in [{nights["start"][i]}, {nights["stop"][i]}]')
                 data[f'{runid.replace(".fits", "")}'][f'{site}'][f'night{i+1:02d}'] = {'start': nights["start"][i], 'stop': nights["stop"][i]}
                 t_start = Time(nights['start'][i], format='jd')
@@ -142,14 +139,15 @@ with warnings.catch_warnings():
                 irfs = visibility.associate_irf_zenith_angle(cfg['setup']['thresholds'], cfg['setup']['zenith_angles'])
                 if type(irfs['zref']) == float:
                     logging.info('................Not visible due to low altitude')
+                    data[f'{runid.replace(".fits", "")}'][f'{site}'][f'night{i+1:02d}']['irfs'] = irfs
                 else:
                     logging.info('................Altitude intervals:')
                     for n in range(len(irfs['zref'])):
                         logging.info(f'................Zenith Ref. {irfs["zref"][n]} in [{irfs["start"][n]}, {irfs["stop"][n]}]')
-                del visibility
-                data[f'{runid.replace(".fits", "")}'][f'{site}'][f'night{i+1:02d}']['irfs'] = irfs
-            del nights, irfs, site_coords, night_duration
-        del afterglow_duration
+                    data[f'{runid.replace(".fits", "")}'][f'{site}'][f'night{i+1:02d}']['irfs'] = irfs
+                #del visibility
+        #del nights, irfs, site_coords, night_duration
+        #del afterglow_duration
 np.save(output, data)
 
 
