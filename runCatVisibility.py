@@ -122,13 +122,15 @@ with warnings.catch_warnings():
                 irfs = nights
                 irfs['zref'] = np.nan
                 #print(f'irfs: {irfs}')
-                data[f'{runid.replace(".fits", "")}'][f'{site}'] = irfs
+                data[f'{runid.replace(".fits", "")}'][f'{site}'] = np.nan
                 del nights, irfs, site_coords
                 continue
                    
             logging.info('Observability windows:') 
+            data[f'{runid.replace(".fits", "")}'][f'{site}'] = {}
             for i in range(len(nights['start'])):
                 logging.info(f'................Night {i+1} of {len(nights["start"])} in [{nights["start"][i]}, {nights["stop"][i]}]')
+                data[f'{runid.replace(".fits", "")}'][f'{site}'][f'night{i+1:02d}'] = {'start': nights["start"][i], 'stop': nights["stop"][i]}
                 t_start = Time(nights['start'][i], format='jd')
                 night_duration = Time(nights['stop'][i] - nights['start'][i], format='jd')
                 # initialise
@@ -145,7 +147,7 @@ with warnings.catch_warnings():
                     for n in range(len(irfs['zref'])):
                         logging.info(f'................Zenith Ref. {irfs["zref"][n]} in [{irfs["start"][n]}, {irfs["stop"][n]}]')
                 del visibility
-                data[f'{runid.replace(".fits", "")}'][f'{site}'] = irfs
+                data[f'{runid.replace(".fits", "")}'][f'{site}'][f'night{i+1:02d}']['irfs'] = irfs
             del nights, irfs, site_coords, night_duration
         del afterglow_duration
 np.save(output, data)
