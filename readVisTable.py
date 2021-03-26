@@ -19,13 +19,22 @@ print(f'In example you can access data with a nested cycle:')
 for n, event in enumerate(events):
     for site in sites:
         print(f'Template {event} - Site {site} - Visibility Intervals:')
-        if type(data[event][site]['zref']) == float:
-            print(f'\tThis contains NaNs ---> the source is not observable at the site.')
+        if type(data[event][site]) == float:
+            print(f'\tThis contains NaNs ---> the source is not observable due to daylight or moon.')
         else:
-            for i in range(len(data[event][site]['zref'])):
-                print(f'\tStart Time: {data[event][site]["start"][i]}')
-                print(f'\tStop Time: {data[event][site]["stop"][i]}')
-                print(f'\tZenith Reference: {data[event][site]["zref"][i]}')
+            print(f"\tThis contains the start and stop of each night.")
+            for night in data[event][site]:
+                print(f"\t{night}")
+                print(f"\tstart: {data[event][site][night]['start']}")
+                print(f"\tstop: {data[event][site][night]['stop']}")
+                print(f"\n\tEach night contains the irfs intervals under the 'irfs' keyword.")
+                if type(data[event][site][night]['irfs']['zref']) == float:
+                    print(f'\tThis contains NaNs ---> the source is not observable at the site.')
+                else:
+                    for i in range(len(data[event][site][night]['irfs']['zref'])):
+                        print(f'\t\tstart: {data[event][site][night]["irfs"]["start"][i]}')
+                        print(f'\t\tstop: {data[event][site][night]["irfs"]["stop"][i]}')
+                        print(f'\t\tzref: {data[event][site][night]["irfs"]["zref"][i]}')
 
     if n > 2:
         print("Let's stop after 3 templates.")
