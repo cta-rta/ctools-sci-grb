@@ -145,3 +145,4 @@ plotV*.py
 *.png
 notebooks/ambra*ipynb
 check*py
+slurm*
