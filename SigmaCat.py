@@ -72,8 +72,7 @@ sites = list(data[events[0]].keys())
 caldb=cfg['ctools']['caldb']
 sim_rad = cfg['ctools']['rad']
 sim_e_max=cfg['ctools']['Emax']
-seeds = np.random.randint(1,1000,size=cfg['ctools']['iterations'])
-
+seeds = np.random.randint(1,1000,size=cfg['ctools']['iterations'])  #seeds randomly genrated to be used for the different simulations
 fitmodel=cfg['ctools']['fitmodel']
 
 for runid in runids:
@@ -211,14 +210,14 @@ for runid in runids:
 
                                         somma_off[i] = somma_off[i]/(a*1.0)
                                         a = 1.0/a
-
+#------------------Adding up all the counts for the single night 
                                     conteggi_on=np.sum(somma_on)
                                     conteggi_off=np.sum(somma_off)
 
                                     print (f'Number of counts (per {night}) in the on region: {conteggi_on}')
                                     print (f'Number of counts (per {night}) in the off region: {conteggi_off}')
-                                    #print(f'Somma ON:{somma_on}')
-                                    #print (f'Somma OFF:{somma_off}')
+                                                    
+ #----------------  Computing significance for the total counts of the night                              
                                     try:
                                         valore[j] = 2*(conteggi_on * m.log((1+a)/a*(conteggi_on/(conteggi_off+conteggi_on))) + conteggi_off * m.log((1+a)*(conteggi_off/(conteggi_off+conteggi_on))))
                                         if valore[j] < 0:
@@ -226,7 +225,6 @@ for runid in runids:
                                         valore[j]=np.sqrt(valore[j])
                                     except ValueError:
                                         continue
-                                    #print (f'sim_t_max {site}: {sim_t_max}')
                                     print (f'significance site {site},{night}, seed {seed} :{valore[j]}')
 
 
@@ -236,7 +234,5 @@ for runid in runids:
                                 data[event][site][night]['sigma_var'] = var
                                 print (f'mean significance, site {site}, {night}: {sigma}, variance: {var}')
 
-    #print (f"{nn} events out of {n+1} can't be detected by CTA North")
-    #print (f"{ss} events out of {n+1} can't be detected by CTA South")
-    #print (data)
+    
     np.save(cfg['path']['sigmaoutput'] , data)
