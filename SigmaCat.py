@@ -105,12 +105,9 @@ for runid in runids:
                         if type(data[event][site]) == float:
                             print(f'\tThis contains NaNs ---> the source is not observable due to daylight or moon.')
                         for i in range(len(data[event][site][night]['irfs']['zref'])):
-                            if type(data[event][site][night]['irfs']['zref'][i]) == float:
+                            if data[event][site][night]['irfs']['zref'][i] == -9.0:
                                 print(f'\tThis contains NaNs event---> the source is not observable at the site.')
-                                data[event][site][night]['sigma_ON/OFF'] = float(-9)
-                            elif data[event][site][night]['irfs']['zref'][i] == -9.0:
-                                print(f'\tThis contains NaNs event---> the source is not observable at the site.')
-                                data[event][site][night]['sigma_ON/OFF'] = float(-9)
+                                data[event][site][night]['sigma_ON/OFF'] = -9.0
 
                             else:
                                 somma_on=np.zeros(shape=len(data[event][site][night]['irfs']['zref']))
