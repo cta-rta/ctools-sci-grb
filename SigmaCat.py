@@ -78,21 +78,14 @@ fitmodel=cfg['ctools']['fitmodel']
 for runid in runids:
     if type(cfg['path']['xmlfilename']) == str:
         inmodel = join(catalog, runid)
-        src=f'{runid.replace(".xml", "")}'
-        src=f'{src.replace("model_", "")}'
-
+        
     elif cfg['path']['xmlfilename'] == None:
         inmodel = runid
-        if len(runids) == len(data[events[0]]):
-            for event in events:
-                src = event
-        else:
-            print( "the possibility to run subcatalogs hasn't been implemented yet: you can either run one event per time or generate a visibility table for the subcataalog")
-        break
+        
 
     for event in events:
-        if event == src:
-            #print (event)
+        name =f'{runid.replace(".xml", "")}'
+        if name.endswith(str(event)):
             print(f'\nProcessing {event}')
             with fits.open(cfg['path']['catalog']+f'/{event}.fits') as hdul:
                     hdr = hdul[0].header
@@ -154,7 +147,7 @@ for runid in runids:
                                         sim['outevents'] =f'events_full_GRB.fits'
                                         sim.execute()
 
-                                        print(f'Simulation site {site} - {night}: DONE')
+                                        print(f'\nSimulation site {site} - {night}: DONE')
 
                                         onoff_sim = cscripts.csphagen()
                                         onoff_sim['inobs'] =  'events_full_GRB.fits'
@@ -205,7 +198,7 @@ for runid in runids:
                                             on.close()
                                             off.close()
 
-                                        somma_off[i] = somma_off[i]/(a*1.0)
+                                        #somma_off[i] = somma_off[i]/(a*1.0)
                                         a = 1.0/a
 #------------------Adding up all the counts for the single night 
                                     conteggi_on=np.sum(somma_on)
