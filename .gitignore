@@ -138,6 +138,7 @@ cfg/local_visibility.yml
 cfg/myconfig.yml
 !cfg/config.yaml
 test/
+log/
 !lib/
 *.sh
 *.log
