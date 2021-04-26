@@ -15,11 +15,13 @@ import logging
 from os.path import join, isfile, isdir
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import EarthLocation, SkyCoord
+from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.io import fits
 from astropy.table import Table
 from lib.visibility import Visibility, complete_irf_name
+from astropy.coordinates import solar_system_ephemeris
+#solar_system_ephemeris.set('jpl') 
 
 # parse command line inputs
 parser = argparse.ArgumentParser(description='This software runs the CTA visibility for a given configuration pass via YAML configuration file. The output is saved as NPY binary file.')
@@ -98,13 +100,11 @@ with warnings.catch_warnings():
                 times = np.array(hdul['TIMES (AFTERGLOW)'].data.tolist())
             except KeyError:
                 times = np.array(hdul['TIMES'].data.tolist())
-            afterglow_duration = Time(((times[-1] + times[1]) / 2)[0] / 86400, format='jd')
+            afterglow_duration = Time((times[-1] - times[1])[0] / 86400, format='jd')
 
         # --------------------------------------------------------------------------- loop sites
         for site in cfg['sites_list']:
             logging.info(f'{site} site')
-            # initialise site coordinates
-            site_coords = EarthLocation.of_site(cfg['sites_list'][site])
             # initialise
             visibility = Visibility()
             # visibility points in JD and AltAz
@@ -117,17 +117,18 @@ with warnings.catch_warnings():
                 nights = visibility.get_nighttime_moonlight(twilight=cfg['setup']['twilight'], moon_sep=cfg['setup']['moon_sep'], fov_rad=cfg['setup']['fov_rad'], moonpha=0, max_moonpha=cfg['setup']['moon_pha'])
             #del visibility
             # within each night find IRFs
-            if type(nights['start']) == float:
+            #print(nights)
+            if len(nights['start']) == 1 and nights['start'] < 0:
                 logging.info('................Not visible either to moonlight or daylight conditions')
-                data[f'{runid.replace(".fits", "")}'][f'{site}'] = np.nan
                 #del nights, irfs, site_coords
                    
             logging.info('Observability windows:') 
             data[f'{runid.replace(".fits", "")}'][f'{site}'] = {}
             for i in range(len(nights['start'])):
-                print('Night', i+1, 'of', len(nights['start']))
+                #print('Night', i+1, 'of', len(nights['start']))
                 logging.info(f'................Night {i+1} of {len(nights["start"])} in [{nights["start"][i]}, {nights["stop"][i]}]')
                 data[f'{runid.replace(".fits", "")}'][f'{site}'][f'night{i+1:02d}'] = {'start': nights["start"][i], 'stop': nights["stop"][i]}
+                #print(nights['start'][i], nights['stop'][i])
                 t_start = Time(nights['start'][i], format='jd')
                 night_duration = Time(nights['stop'][i] - nights['start'][i], format='jd')
                 # initialise
@@ -137,7 +138,7 @@ with warnings.catch_warnings():
                 visibility.visibility_altaz(source_radec, cfg['sites_list'][site])
                 # IRFs and relative time intervals
                 irfs = visibility.associate_irf_zenith_angle(cfg['setup']['thresholds'], cfg['setup']['zenith_angles'])
-                if type(irfs['zref']) == float:
+                if type(irfs['start']) == float and irfs['start'] < 0:
                     logging.info('................Not visible due to low altitude')
                     data[f'{runid.replace(".fits", "")}'][f'{site}'][f'night{i+1:02d}']['irfs'] = irfs
                 else:
@@ -146,10 +147,13 @@ with warnings.catch_warnings():
                         logging.info(f'................Zenith Ref. {irfs["zref"][n]} in [{irfs["start"][n]}, {irfs["stop"][n]}]')
                     data[f'{runid.replace(".fits", "")}'][f'{site}'][f'night{i+1:02d}']['irfs'] = irfs
                 #del visibility
+                #print(irfs)
+                #print(irfs['start'][0], irfs['stop'][-1])
         #del nights, irfs, site_coords, night_duration
         #del afterglow_duration
 np.save(output, data)
 
 
+print("\n\nExit\n\n")
 
-
+#os.system(f"cat {logname}")
