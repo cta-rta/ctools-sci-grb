@@ -68,7 +68,7 @@ class Visibility:
         self.vis_points = self.vis_points * u.s
         return self
 
-    def visibility_altaz(self, source_radec, site):
+    def visibility_altaz(self, source_radec, site, hardcoded=True):
         """
         To each time grid point associates AltAz coordinates.
         :param source_radec: source coordinates (astropy SkyCoord object)
@@ -77,9 +77,21 @@ class Visibility:
         """
         if not hasattr(self, 'vis_points'):
             raise AttributeError('Must invoke visibility_points() before using this method')
-        site_coords = EarthLocation.of_site(site)
+        if not hardcoded:
+            site_coords = EarthLocation.of_site(site)
+        else:
+            if site.lower() in ('north', 'roque de los muchachos'):
+                #site_coords = EarthLocation.from_geodetic('342.1184', '28.7606', 2326. * u.meter)
+                site_coords = EarthLocation.from_geocentric(5327285.09211954, -1718777.11250295, 3051786.7327476, unit="m")
+
+            elif site.lower() in ('south', 'paranal'):
+                #site_coords = EarthLocation.from_geodetic('289.5972', '-24.6253', 2635. * u.meter)
+                site_coords = EarthLocation.from_geocentric(1946635.7979987, -5467633.94561753, -2642498.5212285, unit="m")
+            else:
+                raise Warning(f"{site} is not a valid site choice")
         self.altaz = source_radec.transform_to(AltAz(obstime=self.vis_points, location=site_coords))
         return self
+
 
     def sun_position(self):
         """
@@ -107,7 +119,7 @@ class Visibility:
         self.moon_altaz = moon.transform_to(self.altaz)
         return self
 
-    def get_nighttime(self, twilight=-18, digits=6):
+    def get_nighttime(self, twilight=-18, digits=8):
         """Given a twilight altitute threshold for the Sun, it returns twilight and dawn time for each night covering the event duration.
         :param twilight: <0|-6|-12|-18> civil, naval or astronomical twilight or night thresholds (int). Default -18.
         :return: dictionary containing 'twilight' and 'dawn' time of the Sun for each nighttime window of the event
@@ -146,11 +158,11 @@ class Visibility:
             windows['stop'] = np.concatenate(np.around(windows['stop'], digits), axis=None)
             windows['start'] = np.concatenate(np.around(windows['start'], digits), axis=None)
         else:
-            windows['start'] = np.nan
-            windows['stop'] = np.nan
+            windows['start'] = np.array([-9.0])
+            windows['stop'] = np.array([-9.0])
         return windows
 
-    def get_nighttime_moonlight(self, twilight=-18, moon_sep=30, fov_rad=0, moonpha=0, max_moonpha=0.8, digits=6):
+    def get_nighttime_moonlight(self, twilight=-18, moon_sep=30, fov_rad=0, moonpha=0, max_moonpha=0.8, digits=8):
         """Given a twilight altitute threshold for the Sun and a minimum separation from the Moon position, it returns twilight and dawn time for each night covering the event duration.
         :param twilight: <0|-6|-12|-18|integer> civil, naval or astronomical twilight or night thresholds (int). Default -18 deg (integer).
         :param moon_sep: <integer> minimum angular separation between moon and FoV border. Default 30 deg.
@@ -212,11 +224,11 @@ class Visibility:
             windows['stop'] = np.concatenate(np.around(windows['stop'], digits), axis=None)
             windows['start'] = np.concatenate(np.around(windows['start'], digits), axis=None)
         else:
-            windows['start'] = np.nan
-            windows['stop'] = np.nan
+            windows['start'] = np.array([-9.0])
+            windows['stop'] = np.array([-9.0])
         return windows
 
-    def associate_irf_zenith_angle(self, thresholds=(10, 25, 55), zenith_angles=(60, 40, 20), digits=6):
+    def associate_irf_zenith_angle(self, thresholds=(10, 25, 55), zenith_angles=(60, 40, 20), digits=8):
         """
         Given altitude lower bounds and the respective IRFs zenith angles, it returns which IRF zenith
         angle to use when.
@@ -278,9 +290,9 @@ class Visibility:
             windows['stop'] = np.concatenate(np.around(windows['stop'], digits), axis=None)
             windows['zref'] = np.concatenate(np.around(windows['zref'], digits), axis=None)
         else:
-            windows['start'] = np.nan
-            windows['stop'] = np.nan
-            windows['zref'] = np.nan
+            windows['start'] = np.array([-9.0])
+            windows['stop'] = np.array([-9.0])
+            windows['zref'] = np.array([-9.0])
         return windows
 
     def associate_irf_one_night(self, source_radec, start_time, duration, site, num_points,
