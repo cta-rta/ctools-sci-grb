@@ -19,7 +19,7 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.io import fits
 from astropy.table import Table
-from lib.visibility import Visibility, complete_irf_name
+from lib.visibility_v2 import Visibility, complete_irf_name
 from astropy.coordinates import solar_system_ephemeris
 #solar_system_ephemeris.set('jpl') 
 
