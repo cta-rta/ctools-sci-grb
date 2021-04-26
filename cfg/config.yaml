@@ -50,8 +50,8 @@ ctools:
    caldb: prod3b-v2
  #maximum energy value
    Emax: 2.
- #seed
-   seed: 10
+ #number of seeds to be randomly generated/ number of iterations
+   iterations: 100	
   
 
 
