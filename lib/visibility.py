@@ -12,7 +12,7 @@ import astropy.units as u
 import numpy as np
 from scipy.interpolate import interp1d
 from astropy.coordinates import AltAz, EarthLocation, get_sun, get_moon, SkyCoord
-
+from astropy.coordinates import solar_system_ephemeris
 
 def complete_irf_name(irfs, site, exposure, azimuth=None):
     """
@@ -40,6 +40,10 @@ class Visibility:
     def __init__(self):
         pass
 
+    def set_jpl_ephemeris(self):
+        solar_system_ephemeris.set('jpl') 
+        return
+    
     def visibility_points(self, trigger, duration, num_points=10, unit='jd'):
         """
         It creates a time grid.
