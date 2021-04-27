@@ -19,9 +19,8 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.io import fits
 from astropy.table import Table
-from lib.visibility_v2 import Visibility, complete_irf_name
+from lib.visibility import Visibility, complete_irf_name
 from astropy.coordinates import solar_system_ephemeris
-#solar_system_ephemeris.set('jpl') 
 
 # parse command line inputs
 parser = argparse.ArgumentParser(description='This software runs the CTA visibility for a given configuration pass via YAML configuration file. The output is saved as NPY binary file.')
@@ -31,6 +30,12 @@ cf = parser.parse_args().config
 # load params configuration from cf
 with open(cf) as f:
     cfg = yaml.load(f, Loader=yaml.FullLoader)
+
+# set ephemeris
+if cfg['ephemeris'] == 'jpl':
+    solar_system_ephemeris.set('jpl') 
+elif cfg['ephemeris'] not in ('default', 'jpl'):
+    raise ValueError("selected ephemeris not implemented, please use either default or jpl.")
 
 # ----------------------------------------------------------------------------- catalog
 if '$' in cfg['path']['catalog']:
@@ -107,6 +112,9 @@ with warnings.catch_warnings():
             logging.info(f'{site} site')
             # initialise
             visibility = Visibility()
+            # set ephemeris
+            if cfg['ephemeris'] == 'jpl':
+                visibility.set_jpl_ephemeris()
             # visibility points in JD and AltAz
             visibility.visibility_points(trigger, afterglow_duration, cfg['total_points'])
             visibility.visibility_altaz(source_radec, cfg['sites_list'][site])
@@ -118,7 +126,7 @@ with warnings.catch_warnings():
             #del visibility
             # within each night find IRFs
             #print(nights)
-            if len(nights['start']) == 1 and nights['start'] < 0:
+            if nights['start'][0] < 0:
                 logging.info('................Not visible either to moonlight or daylight conditions')
                 #del nights, irfs, site_coords
                    
@@ -133,12 +141,15 @@ with warnings.catch_warnings():
                 night_duration = Time(nights['stop'][i] - nights['start'][i], format='jd')
                 # initialise
                 visibility = Visibility()
+                # set ephemeris
+                if cfg['ephemeris'] == 'jpl':
+                    visibility.set_jpl_ephemeris()
                 # visibility points in JD and AltAz
                 visibility.visibility_points(t_start, night_duration, cfg['window_points'])
                 visibility.visibility_altaz(source_radec, cfg['sites_list'][site])
                 # IRFs and relative time intervals
                 irfs = visibility.associate_irf_zenith_angle(cfg['setup']['thresholds'], cfg['setup']['zenith_angles'])
-                if type(irfs['start']) == float and irfs['start'] < 0:
+                if irfs['start'][0] < 0:
                     logging.info('................Not visible due to low altitude')
                     data[f'{runid.replace(".fits", "")}'][f'{site}'][f'night{i+1:02d}']['irfs'] = irfs
                 else:
