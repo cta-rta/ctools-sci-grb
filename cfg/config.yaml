@@ -40,6 +40,8 @@ sites_list:
 total_points: 100
 # grid points within visibility window
 window_points: 10
+# set ephemeris (if jpl -> install them beforehand)
+ephemeris: default
 #parameters to use for simulation with ctools
 ctools:
  #simulation radius
