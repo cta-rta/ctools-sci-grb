@@ -166,6 +166,68 @@ class Visibility:
             windows['stop'] = np.array([-9.0])
         return windows
 
+    def get_nighttime_moon_veto(self, twilight=-18, moon_alt_max=-0.5, digits=8):
+        """Given a twilight altitute threshold for the Sun, it returns twilight and dawn time for each night covering the event duration with a veto on the Moon presence.
+        :param twilight: <0|-6|-12|-18|integer> civil, naval or astronomical twilight or night thresholds (int). Default -18 deg (integer).
+        :return: dictionary containing 'start' and 'stop' time of the Sun for each nighttime window of the event
+        """
+        if not hasattr(self, 'vis_points'):
+            raise AttributeError('Must invoke visibility_points() before using this method')
+        if not hasattr(self, 'altaz'):
+            raise AttributeError('Must invoke visibility_altaz() before using this method')
+        self.sun_position()
+        self.moon_position()
+        windows = {'start': [], 'stop': []}
+        current = None
+        for idx, t in enumerate(self.vis_points.value):
+            previous = current
+            # visibility conditions
+            sun_cond = np.array(self.sun_altaz.alt.value < twilight)
+            moon_cond = np.array(self.moon_altaz.alt.value < moon_alt_max)
+            if sun_cond[idx] and moon_cond[idx]:
+                current = True
+            else:
+                current = False
+            if idx == 0 and current is True:
+                windows['start'].append(self.vis_points[idx].value)
+                continue
+            elif idx == len(self.vis_points.value) - 1 and current is True:
+                windows['stop'].append(self.vis_points[idx].value)
+                break
+            elif previous != current and previous != None:
+                use = None
+                # assign x and y arrays
+                if sun_cond[idx] != sun_cond[idx - 1]:
+                    x = [self.sun_altaz[idx - 1].alt.value, self.sun_altaz[idx].alt.value]
+                    y = [self.vis_points[idx - 1].value, self.vis_points[idx].value]
+                    use = 'sun'
+                elif moon_cond[idx] != moon_cond[idx - 1]:
+                    x = [self.moon_altaz[idx - 1].alt.deg, self.moon_altaz[idx].alt.deg]
+                    y = [self.vis_points[idx - 1].value, self.vis_points[idx].value] 
+                    use = 'moon'                
+                # interpolate
+                f = interp1d(np.array(x), np.array(y))
+                if previous is False and current is True:
+                    if use == 'sun':
+                        windows['start'].append(f(twilight))
+                    elif use == 'moon':
+                        windows['start'].append(f(moon_alt_max))
+                elif previous is True and current is False:
+                    if use == 'sun':
+                        windows['stop'].append(f(twilight))
+                    elif use == 'moon':
+                        windows['stop'].append(f(moon_alt_max))
+
+
+        if len(windows['start']) != 0:
+            windows['stop'] = np.concatenate(np.around(windows['stop'], digits), axis=None)
+            windows['start'] = np.concatenate(np.around(windows['start'], digits), axis=None)
+        else:
+            windows['start'] = np.array([-9.0])
+            windows['stop'] = np.array([-9.0])
+        return windows
+
+
     def get_nighttime_moonlight(self, twilight=-18, moon_sep=30, fov_rad=0, moonpha=0, max_moonpha=0.8, digits=8):
         """Given a twilight altitute threshold for the Sun and a minimum separation from the Moon position, it returns twilight and dawn time for each night covering the event duration.
         :param twilight: <0|-6|-12|-18|integer> civil, naval or astronomical twilight or night thresholds (int). Default -18 deg (integer).
