@@ -135,7 +135,7 @@ for runid in runids:
 
                                             # ----------------------------------------time selection for IRF
                                             delta_t_irf = t_slice_stop - results[event][site]['first_night_start']
-                                            
+
                                             name_irf = irf_selection(site, zenith_angle, delta_t_irf)[0]
                                             sim_e_min = irf_selection(site, zenith_angle, delta_t_irf)[1]
 
