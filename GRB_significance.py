@@ -7,7 +7,7 @@ from astropy.io import fits
 import argparse
 import yaml
 import numpy as np
-from lib.TOW_functions import irf_selection, read_input_file
+from lib.functions import irf_selection, read_input_file
 
 parser = argparse.ArgumentParser(description='The significance of a GRB observation is computed at different IRFs according to a visibility table, created with runCatVisibility.py. A configuration YAML file is required, the output is saved as NPY binary file.')
 parser.add_argument('-f', '--config', required=True, type=str, help='configuration yaml file')
@@ -135,7 +135,7 @@ for runid in runids:
 
                                             # ----------------------------------------time selection for IRF
                                             delta_t_irf = t_slice_stop - results[event][site]['first_night_start']
-                                            
+
                                             name_irf = irf_selection(site, zenith_angle, delta_t_irf)[0]
                                             sim_e_min = irf_selection(site, zenith_angle, delta_t_irf)[1]
 
